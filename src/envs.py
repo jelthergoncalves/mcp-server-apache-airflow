@@ -12,5 +12,10 @@ AIRFLOW_PASSWORD = os.getenv("AIRFLOW_PASSWORD")
 AIRFLOW_JWT_TOKEN = os.getenv("AIRFLOW_JWT_TOKEN")
 AIRFLOW_API_VERSION = os.getenv("AIRFLOW_API_VERSION", "v1")
 
+# AWS MWAA (Managed Workflows for Apache Airflow) authentication
+MWAA_ENV_NAME = os.getenv("MWAA_ENV_NAME")
+MWAA_REGION = os.getenv("MWAA_REGION")
+MWAA_PROFILE = os.getenv("MWAA_PROFILE")
+
 # Environment variable for read-only mode
 READ_ONLY = os.getenv("READ_ONLY", "false").lower() in ("true", "1", "yes", "on")

@@ -142,7 +142,23 @@ curl -X 'POST' \
   -d '{ "username": "<your-username>", "password": "<your-password>" }'
 ```
 
-> **Note**: If both JWT token and basic authentication credentials are provided, JWT token takes precedence.
+> **Note**: Authentication precedence: MWAA > JWT > Basic Auth.
+
+**AWS MWAA (Managed Workflows for Apache Airflow):**
+
+For AWS MWAA environments, the server uses IAM-based authentication via `CreateWebLoginToken`. Tokens are short-lived (~60s) and automatically refreshed before each API call.
+
+```
+MWAA_ENV_NAME=<your-mwaa-environment-name>  # Required for MWAA auth
+MWAA_REGION=<aws-region>                     # Optional, uses default AWS config if not set
+MWAA_PROFILE=<aws-profile>                   # Optional, uses default profile if not set
+```
+
+When `MWAA_ENV_NAME` is set, `AIRFLOW_HOST` is automatically derived from the MWAA API response unless explicitly provided. Install the MWAA extra to pull in `boto3`:
+
+```bash
+pip install mcp-server-apache-airflow[mwaa]
+```
 
 ### Usage with Claude Desktop
 
@@ -175,6 +191,22 @@ Add to your `claude_desktop_config.json`:
       "env": {
         "AIRFLOW_HOST": "https://your-airflow-host",
         "AIRFLOW_JWT_TOKEN": "your-jwt-token"
+      }
+    }
+  }
+}
+```
+
+**AWS MWAA Authentication:**
+```json
+{
+  "mcpServers": {
+    "mcp-server-apache-airflow": {
+      "command": "uvx",
+      "args": ["mcp-server-apache-airflow[mwaa]"],
+      "env": {
+        "MWAA_ENV_NAME": "your-mwaa-environment-name",
+        "MWAA_REGION": "us-east-1"
       }
     }
   }

@@ -5,24 +5,29 @@ startCommand:
   configSchema:
     # JSON Schema defining the configuration options for the MCP.
     type: object
-    required:
-      - airflowHost
-      - airflowUsername
-      - airflowPassword
     properties:
       airflowHost:
         type: string
-        description: The host URL for the Airflow instance.
+        description: The host URL for the Airflow instance. Auto-derived from MWAA if not set.
       airflowUsername:
         type: string
-        description: The username for Airflow authentication.
+        description: The username for Airflow basic authentication.
       airflowPassword:
         type: string
-        description: The password for Airflow authentication.
+        description: The password for Airflow basic authentication.
       airflowApiVersion:
         type: string
         description: The Airflow API version to use (defaults to v1).
+      mwaaEnvName:
+        type: string
+        description: AWS MWAA environment name. When set, MWAA auth takes precedence.
+      mwaaRegion:
+        type: string
+        description: AWS region for MWAA (optional, uses default AWS config if not set).
+      mwaaProfile:
+        type: string
+        description: AWS profile name for MWAA (optional, uses default profile if not set).
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    (config) => ({ command: 'python', args: ['src/server.py'], env: { AIRFLOW_HOST: config.airflowHost, AIRFLOW_USERNAME: config.airflowUsername, AIRFLOW_PASSWORD: config.airflowPassword, AIRFLOW_API_VERSION: config.airflowApiVersion || 'v1' } })
+    (config) => ({ command: 'python', args: ['src/server.py'], env: { ...(config.airflowHost && { AIRFLOW_HOST: config.airflowHost }), ...(config.airflowUsername && { AIRFLOW_USERNAME: config.airflowUsername }), ...(config.airflowPassword && { AIRFLOW_PASSWORD: config.airflowPassword }), AIRFLOW_API_VERSION: config.airflowApiVersion || 'v1', ...(config.mwaaEnvName && { MWAA_ENV_NAME: config.mwaaEnvName }), ...(config.mwaaRegion && { MWAA_REGION: config.mwaaRegion }), ...(config.mwaaProfile && { MWAA_PROFILE: config.mwaaProfile }) } })

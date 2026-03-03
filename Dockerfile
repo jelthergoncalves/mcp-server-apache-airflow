@@ -10,7 +10,7 @@ COPY . .
 
 # Install the project dependencies
 RUN pip install uv
-RUN uv sync
+RUN uv sync --extra mwaa
 
 # Expose the port that the server will run on
 EXPOSE 8000
