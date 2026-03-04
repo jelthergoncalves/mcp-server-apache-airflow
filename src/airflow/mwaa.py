@@ -1,15 +1,15 @@
-import logging
 import time
 
 import requests
 from airflow_client.client import ApiClient
+from fastmcp.utilities.logging import get_logger
 
 try:
     import boto3
 except ImportError:
     boto3 = None
 
-logger = logging.getLogger(__name__)
+logger = get_logger("airflow.mwaa")
 
 # Session token is valid for 12h; refresh 30min before expiry
 _SESSION_REFRESH_BUFFER_SECONDS = 1800

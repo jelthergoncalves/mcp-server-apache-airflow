@@ -19,3 +19,6 @@ MWAA_PROFILE = os.getenv("MWAA_PROFILE")
 
 # Environment variable for read-only mode
 READ_ONLY = os.getenv("READ_ONLY", "false").lower() in ("true", "1", "yes", "on")
+
+# Optional file logging (useful for debugging in Claude Code sessions)
+LOG_FILE = os.getenv("LOG_FILE")

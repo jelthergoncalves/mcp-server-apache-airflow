@@ -2,6 +2,7 @@ import logging
 
 import click
 from fastmcp.tools import Tool
+from fastmcp.utilities.logging import get_logger
 
 from src.airflow.config import get_all_functions as get_config_functions
 from src.airflow.connection import get_all_functions as get_connection_functions
@@ -19,7 +20,9 @@ from src.airflow.taskinstance import get_all_functions as get_taskinstance_funct
 from src.airflow.variable import get_all_functions as get_variable_functions
 from src.airflow.xcom import get_all_functions as get_xcom_functions
 from src.enums import APIType
-from src.envs import READ_ONLY
+from src.envs import LOG_FILE, READ_ONLY
+
+logger = get_logger("airflow")
 
 APITYPE_TO_FUNCTIONS = {
     APIType.CONFIG: get_config_functions,
@@ -77,11 +80,21 @@ def filter_functions_for_read_only(functions: list[tuple]) -> list[tuple]:
     default=READ_ONLY,
     help="Only expose read-only tools (GET operations, no CREATE/UPDATE/DELETE)",
 )
-def main(transport: str, mcp_host: str, mcp_port: int, apis: list[str], read_only: bool) -> None:
+@click.option(
+    "--log-file",
+    default=LOG_FILE,
+    help="Path to a log file. All FastMCP and project logs will be written there.",
+)
+def main(transport: str, mcp_host: str, mcp_port: int, apis: list[str], read_only: bool, log_file: str | None) -> None:
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s"))
+        logging.getLogger("FastMCP").addHandler(file_handler)
+
     from src.server import app
 
     for api in apis:
-        logging.debug(f"Adding API: {api}")
+        logger.debug(f"Adding API: {api}")
         get_function = APITYPE_TO_FUNCTIONS[APIType(api)]
         try:
             functions = get_function()
@@ -95,12 +108,12 @@ def main(transport: str, mcp_host: str, mcp_port: int, apis: list[str], read_onl
         for func, name, description, *_ in functions:
             app.add_tool(Tool.from_function(func, name=name, description=description))
 
-    logging.debug(f"Starting MCP server for Apache Airflow with {transport} transport")
+    logger.debug(f"Starting MCP server for Apache Airflow with {transport} transport")
     params_to_run = {}
 
     if transport in {"sse", "http"}:
         if transport == "sse":
-            logging.warning("NOTE: the SSE transport is going to be deprecated.")
+            logger.warning("NOTE: the SSE transport is going to be deprecated.")
 
         params_to_run = {"port": int(mcp_port), "host": mcp_host}
 

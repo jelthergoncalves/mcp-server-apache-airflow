@@ -1,7 +1,18 @@
+import logging
 import os
+import sys
 from urllib.parse import urljoin
 
 from airflow_client.client import ApiClient, Configuration
+from rich.console import Console
+from rich.logging import RichHandler
+
+# Redirect FastMCP's RichHandler to stderr so log output doesn't corrupt
+# the stdio JSON-RPC transport used by MCP clients.
+_fastmcp_logger = logging.getLogger("FastMCP")
+for _h in _fastmcp_logger.handlers:
+    if isinstance(_h, RichHandler):
+        _h.console = Console(stderr=True)
 
 from src.envs import (
     AIRFLOW_API_VERSION,
