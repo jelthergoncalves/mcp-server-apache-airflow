@@ -29,7 +29,7 @@ classifiers = [
 keywords = ["mcp", "airflow", "apache-airflow", "model-context-protocol"]
 
 [project.optional-dependencies]
-mwaa = ["boto3>=1.28.0"]
+mwaa = ["boto3>=1.28.0", "requests>=2.28.0"]
 dev = [
     "build>=1.2.2.post1",
     "twine>=6.1.0",
