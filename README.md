@@ -49,6 +49,12 @@ This project implements a [Model Context Protocol](https://modelcontextprotocol.
 | Clear Task Instances             | `/api/v1/dags/{dag_id}/clearTaskInstances`                                                  | ✅     |
 | Set Task Instances State         | `/api/v1/dags/{dag_id}/updateTaskInstancesState`                                            | ✅     |
 | List Task Instance Tries         | `/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances/{task_id}/tries`                  | ✅     |
+
+> **Note**: `clear_task_instances` defaults `only_failed=true` (per the Airflow API) when the
+> `only_failed` parameter is omitted, so it will silently clear zero task instances if the
+> targeted tasks are not in a `failed` state. Pass `only_failed=False` explicitly to clear
+> tasks in other states (e.g. `success`).
+
 | **Variables**              |                                                                                               |        |
 | List Variables                   | `/api/v1/variables`                                                                         | ✅     |
 | Create Variable                  | `/api/v1/variables`                                                                         | ✅     |
