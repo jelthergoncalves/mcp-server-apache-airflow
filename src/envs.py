@@ -20,5 +20,8 @@ MWAA_PROFILE = os.getenv("MWAA_PROFILE")
 # Environment variable for read-only mode
 READ_ONLY = os.getenv("READ_ONLY", "false").lower() in ("true", "1", "yes", "on")
 
+# Max characters per text result returned by a tool; longer output is truncated (head + tail). 0 = off.
+MCP_MAX_OUTPUT_CHARS = int(os.getenv("MCP_MAX_OUTPUT_CHARS", "0") or 0)
+
 # Optional file logging (useful for debugging in Claude Code sessions)
 LOG_FILE = os.getenv("LOG_FILE")
