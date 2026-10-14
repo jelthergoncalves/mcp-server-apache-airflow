@@ -1,6 +1,9 @@
+import functools
+import inspect
 import logging
 
 import click
+import mcp.types as types
 from fastmcp.tools import Tool
 from fastmcp.utilities.logging import get_logger
 
@@ -20,9 +23,46 @@ from src.airflow.taskinstance import get_all_functions as get_taskinstance_funct
 from src.airflow.variable import get_all_functions as get_variable_functions
 from src.airflow.xcom import get_all_functions as get_xcom_functions
 from src.enums import APIType
-from src.envs import LOG_FILE, READ_ONLY
+from src.envs import LOG_FILE, MCP_MAX_OUTPUT_CHARS, READ_ONLY
 
 logger = get_logger("airflow")
+
+
+def cap_output(func, limit: int):
+    """Wrap a tool so text results longer than `limit` chars keep only head + tail. limit <= 0 returns func as-is."""
+    if limit <= 0:
+        return func
+
+    def _cap(result):
+        if not isinstance(result, list):
+            return result
+        half = limit // 2
+        out = []
+        for item in result:
+            text = getattr(item, "text", None)
+            if getattr(item, "type", None) == "text" and isinstance(text, str) and len(text) > limit:
+                marker = (
+                    f"\n...[TRUNCATED: showing {limit} of {len(text)} chars. "
+                    "Delegate to finops-developer-explorer for full output]...\n"
+                )
+                item = types.TextContent(type="text", text=text[:half] + marker + text[-half:])
+            out.append(item)
+        return out
+
+    if inspect.iscoroutinefunction(func):
+
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            return _cap(await func(*args, **kwargs))
+
+    else:
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return _cap(func(*args, **kwargs))
+
+    return wrapper
+
 
 APITYPE_TO_FUNCTIONS = {
     APIType.CONFIG: get_config_functions,
@@ -106,7 +146,7 @@ def main(transport: str, mcp_host: str, mcp_port: int, apis: list[str], read_onl
             functions = filter_functions_for_read_only(functions)
 
         for func, name, description, *_ in functions:
-            app.add_tool(Tool.from_function(func, name=name, description=description))
+            app.add_tool(Tool.from_function(cap_output(func, MCP_MAX_OUTPUT_CHARS), name=name, description=description))
 
     logger.debug(f"Starting MCP server for Apache Airflow with {transport} transport")
     params_to_run = {}

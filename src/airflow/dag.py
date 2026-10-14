@@ -27,7 +27,13 @@ def get_all_functions() -> list[tuple[Callable, str, str, bool]]:
         (patch_dag, "patch_dag", "Update a DAG", False),
         (patch_dags, "patch_dags", "Update multiple DAGs", False),
         (delete_dag, "delete_dag", "Delete a DAG", False),
-        (clear_task_instances, "clear_task_instances", "Clear a set of task instances", False),
+        (
+            clear_task_instances,
+            "clear_task_instances",
+            "Clear a set of task instances. Airflow defaults only_failed=true when omitted, "
+            "so pass only_failed=False to clear non-failed (e.g. success) task instances.",
+            False,
+        ),
         (set_task_instances_state, "set_task_instances_state", "Set a state of task instances", False),
         (reparse_dag_file, "reparse_dag_file", "Request re-parsing of a DAG file", False),
     ]
@@ -200,6 +206,9 @@ async def clear_task_instances(
     include_downstream: Optional[bool] = None,
     include_future: Optional[bool] = None,
     include_past: Optional[bool] = None,
+    only_failed: Optional[bool] = None,
+    only_running: Optional[bool] = None,
+    dag_run_id: Optional[str] = None,
     dry_run: Optional[bool] = None,
     reset_dag_runs: Optional[bool] = None,
 ) -> List[Union[types.TextContent, types.ImageContent, types.EmbeddedResource]]:
@@ -222,6 +231,12 @@ async def clear_task_instances(
         clear_request["include_future"] = include_future
     if include_past is not None:
         clear_request["include_past"] = include_past
+    if only_failed is not None:
+        clear_request["only_failed"] = only_failed
+    if only_running is not None:
+        clear_request["only_running"] = only_running
+    if dag_run_id is not None:
+        clear_request["dag_run_id"] = dag_run_id
     if dry_run is not None:
         clear_request["dry_run"] = dry_run
     if reset_dag_runs is not None:

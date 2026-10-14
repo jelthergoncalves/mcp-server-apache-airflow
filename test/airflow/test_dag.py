@@ -334,6 +334,23 @@ class TestDagModule:
                     "dry_run": True,
                 },
             },
+            {
+                "name": "clear_task_instances_only_failed_false",
+                "input": {
+                    "dag_id": "test_dag",
+                    "task_ids": ["collect_spend_logs", "collect_user_snapshots"],
+                    "only_failed": False,
+                    "only_running": True,
+                    "dag_run_id": "manual__2026-04-24T04:00:00+00:00",
+                },
+                "mock_response": {"task_instances": []},
+                "expected_clear_request": {
+                    "task_ids": ["collect_spend_logs", "collect_user_snapshots"],
+                    "only_failed": False,
+                    "only_running": True,
+                    "dag_run_id": "manual__2026-04-24T04:00:00+00:00",
+                },
+            },
         ],
     )
     async def test_clear_task_instances_table_driven(self, test_case, mock_dag_api):
